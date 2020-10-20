@@ -13,42 +13,42 @@ session_start();
 require 'config.php';
 require 'function.php';
 
-if (isset($_GET['pid']) && $_GET['pid'] != "") {
-    $id = $_GET['pid'];
-    // echo $id;
-    $sql = "SELECT * FROM products WHERE `product_id` = '$id' ";
-    $res = mysqli_query($conn, $sql);
-    $row = mysqli_fetch_assoc($res);
-    // print_r($row);
-
-    $cart = array(
-        $row['product_id']=>array(
-          "pid"=>$row['product_id'],
-          "name"=>$row['name'],
-          "price"=>$row['price'],
-          "image"=>$row['image'],
-          "qty"=>1
-        )
-    );
-
-    $itemQty = "";
-    foreach ($cart as $key => $value) {
-          $itemQty = $value['qty'];
-    }
-
-    if (empty($_SESSION['cartData'])) {
-        $_SESSION['cartData'] = $cart;
+if (isset($_GET['pid'])) {
+    if (isset($_SESSION['cartData'])) {
+        $cart = $_SESSION['cartData'];
     } else {
-        // echo "<pre>";
-        // print_r($_SESSION['cartData']);
-        // echo "</pre>";
-        if (in_array($id, array_keys($_SESSION['cartData']))) {
-            $_SESSION['cartData'][$key]['qty'] += $itemQty;
-        } else {
-            $_SESSION['cartData'] 
-                = array_merge($_SESSION['cartData'], $cart);
+        $cart = array();
+    }
+    $id = $_GET['pid'];
+    $sql = "SELECT * FROM products WHERE `product_id` =  '$id' ";
+    $res = mysqli_query($conn, $sql);
+    while ($row = mysqli_fetch_assoc($res)) {
+        if ($row['product_id'] == $id) {
+            $pid = $row['product_id'];
+            $pname = $row['name'];
+            $pprice = $row['price'];
+            $pimage = $row['image'];
+      
+            $cartArray = array(
+              "pid"=>$pid,
+              "name"=>$pname,
+              "price"=>$pprice,
+              "image"=>$pimage,
+              "qty"=>1
+            );
+
+            $_SESSION['cartData'] = $cartArray;
+            array_push($cart, $_SESSION['cartData']);
+
+            for ($i=0; $i <= count($cart)-2; $i++) { 
+                if ($cart[$i]['name']==$cartArray['name'] && $cart[$i]['price']==$cartArray['price']) {
+                    $cart[$i]['qty']=$cart[$i]['qty']+1;
+                    array_pop($cart);
+                }
+            }
         }
     }
+    $_SESSION['cartData']=$cart;
 }
 
 require 'header.php';
